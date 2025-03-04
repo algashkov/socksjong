@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socksjong</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #start-screen {
+      text-align: center;
+    }
+
+    #start-screen img {
+      width: 80%;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+
+    #start-screen h1 {
+      font-size: 2.5rem;
+      margin: 0;
+    }
+
+    #start-screen p {
+      font-size: 1.2rem;
+      margin: 10px 0 20px;
+    }
+
+    #start-screen button {
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    #start-screen button:hover {
+      background-color: #45a049;
+    }
+
+    #game {
+      display: none;
+      text-align: center;
+      width: 100%;
+    }
+
+    #socks-pile {
+      position: relative;
+      width: 90%;
+      height: 60vh;
+      margin: 0 auto 20px;
+    }
+
+    .sock {
+      position: absolute;
+      width: 50px;
+      height: 80px;
+      cursor: pointer;
+      transition: opacity 0.5s, box-shadow 0.3s;
+      border-radius: 10px;
+      touch-action: manipulation; /* Для лучшей реакции на касания */
+    }
+
+    .sock.flipped {
+      box-shadow: 0 0 0 4px #ffcc00; /* Желтая рамка вокруг носка */
+    }
+
+    .sock.matched {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #score, #timer, #mistakes {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+
+    #game-over {
+      display: none;
+      font-size: 1.5rem;
+      color: red;
+      margin-top: 20px;
+    }
+
+    #orientation-warning {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      font-size: 1.5rem;
+      text-align: center;
+      padding-top: 20%;
+      z-index: 1000;
+    }
+
+    @media (orientation: portrait) {
+      #orientation-warning {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="start-screen">
+    <img src="logo.svg" alt="Логотип Socksjong">
+    <h1>Socksjong</h1>
+    <p>Это как Tinder: много вариантов, но пары находятся не сразу.</p>
+    <button id="start-button">Начать игру</button>
+  </div>
+
+  <div id="game">
+    <h1>Уровень <span id="level">1</span></h1>
+    <div id="socks-pile">
+      <!-- Носки будут добавлены сюда -->
+    </div>
+    <div id="score">Ходы: <span id="move-count">0</span></div>
+    <div id="mistakes">Ошибки: <span id="mistake-count">0</span>/3</div>
+    <div id="timer">Время: <span id="time">00:00</span></div>
+    <div id="game-over">Game Over!</div>
+  </div>
+
+  <div id="orientation-warning">
+    Пожалуйста, переверните устройство в горизонтальную ориентацию для игры.
+  </div>
+
+  <!-- Звуки -->
+  <audio id="click-sound" src="https://assets.mixkit.co/active_storage/sfx/2311/2311-preview.mp3"></audio>
+  <audio id="match-sound" src="https://assets.mixkit.co/active_storage/sfx/2213/2213-preview.mp3"></audio>
+  <audio id="win-sound" src="https://assets.mixkit.co/active_storage/sfx/2763/2763-preview.mp3"></audio>
+  <audio id="game-over-sound" src="https://assets.mixkit.co/active_storage/sfx/1100/1100-preview.mp3"></audio>
+  <audio id="start-sound" src="https://assets.mixkit.co/active_storage/sfx/1097/1097-preview.mp3"></audio>
+  <audio id="error-sound" src="https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3"></audio>
+  <audio id="level-complete-sound" src="https://assets.mixkit.co/active_storage/sfx/1099/1099-preview.mp3"></audio>
+
+  <script>
+    const levels = [
+      { socks: 4 },  // Уровень 1: 4 носка (2 пары)
+      { socks: 8 },  // Уровень 2: 8 носков (4 пары)
+      { socks: 12 }, // Уровень 3: 12 носков (6 пар)
+      { socks: 16 }, // Уровень 4: 16 носков (8 пар)
+      { socks: 20 }, // Уровень 5: 20 носков (10 пар)
+      { socks: 24 }, // Уровень 6: 24 носка (12 пар)
+      { socks: 28 }, // Уровень 7: 28 носков (14 пар)
+      { socks: 32 }, // Уровень 8: 32 носка (16 пар)
+      { socks: 36 }, // Уровень 9: 36 носков (18 пар)
+      { socks: 38 }, // Уровень 10: 38 носков (19 пар)
+    ];
+    let currentLevel = 0;
+    let socks = [];
+    let flippedSocks = [];
+    let moveCount = 0;
+    let mistakeCount = 0;
+    let time = 0;
+    let timerInterval;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function getRandomPosition(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function createGameBoard() {
+      const pile = document.getElementById('socks-pile');
+      pile.innerHTML = '';
+      const levelData = levels[currentLevel];
+      socks = [];
+
+      // Создаем пары носков
+      for (let i = 0; i < levelData.socks / 2; i++) {
+        const sockNumber = (i % 38) + 1; // Номер носка от 1 до 38
+        const sockType = `sock${String(sockNumber).padStart(2, '0')}.svg`; // Добавляем ведущий ноль
+        socks.push(sockType, sockType);
+      }
+
+      shuffle(socks);
+
+      // Создаем носки в куче
+      socks.forEach((sock, index) => {
+        const sockElement = document.createElement('img');
+        sockElement.classList.add('sock');
+        sockElement.src = `images/${sock}`;
+        sockElement.dataset.index = index;
+        const angle = Math.random() * 360; // Случайный угол для клубка
+        const distance = Math.random() * 100; // Случайное расстояние от центра
+        sockElement.style.left = `calc(50% + ${Math.cos(angle) * distance}px)`; // Позиция по X
+        sockElement.style.top = `calc(50% + ${Math.sin(angle) * distance}px)`; // Позиция по Y
+        sockElement.style.transform = `rotate(${getRandomPosition(-30, 30)}deg)`; // Случайный поворот
+        sockElement.addEventListener('click', flipSock);
+        sockElement.addEventListener('touchstart', flipSock); // Для мобильных устройств
+        pile.appendChild(sockElement);
+      });
+    }
+
+    function flipSock(event) {
+      const sock = event.target;
+      if (flippedSocks.length < 2 && !sock.classList.contains('flipped')) {
+        sock.classList.add('flipped');
+        flippedSocks.push(sock);
+        document.getElementById('click-sound').play();
+        if (flippedSocks.length === 2) {
+          moveCount++;
+          document.getElementById('move-count').textContent = moveCount;
+          checkMatch();
+        }
+      }
+    }
+
+    function checkMatch() {
+      const [sock1, sock2] = flippedSocks;
+      if (sock1.src === sock2.src) {
+        sock1.classList.add('matched');
+        sock2.classList.add('matched');
+        flippedSocks = [];
+        document.getElementById('match-sound').play();
+        if (document.querySelectorAll('.sock.matched').length === socks.length) {
+          clearInterval(timerInterval);
+          document.getElementById('win-sound').play();
+          document.getElementById('level-complete-sound').play();
+          setTimeout(() => {
+            currentLevel++;
+            if (currentLevel >= levels.length) {
+              alert('Вы прошли все уровни!');
+              currentLevel = 0;
+            }
+            document.getElementById('level').textContent = currentLevel + 1;
+            resetGame();
+          }, 1000);
+        }
+      } else {
+        mistakeCount++;
+        document.getElementById('mistake-count').textContent = mistakeCount;
+        document.getElementById('error-sound').play();
+        if (mistakeCount >= 3) {
+          gameOver();
+        } else {
+          setTimeout(() => {
+            sock1.classList.remove('flipped');
+            sock2.classList.remove('flipped');
+            flippedSocks = [];
+          }, 1000);
+        }
+      }
+    }
+
+    function gameOver() {
+      clearInterval(timerInterval);
+      document.getElementById('game-over').style.display = 'block';
+      document.getElementById('game-over-sound').play();
+      setTimeout(() => {
+        resetGame();
+      }, 3000);
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        time++;
+        document.getElementById('time').textContent = String(time).padStart(2, '0');
+      }, 1000);
+    }
+
+    function resetGame() {
+      flippedSocks = [];
+      moveCount = 0;
+      mistakeCount = 0;
+      time = 0;
+      document.getElementById('move-count').textContent = moveCount;
+      document.getElementById('mistake-count').textContent = mistakeCount;
+      document.getElementById('time').textContent = '00';
+      document.getElementById('game-over').style.display = 'none';
+      clearInterval(timerInterval);
+      createGameBoard();
+      startTimer();
+    }
+
+    // Обработчик для кнопки "Начать игру"
+    document.getElementById('start-button').addEventListener('click', () => {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('game').style.display = 'block';
+      document.getElementById('start-sound').play();
+      resetGame();
+    });
+
+    // Инициализация игры
+    createGameBoard();
+  </script>
+</body>
+</html>
