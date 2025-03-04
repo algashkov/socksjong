@@ -64,14 +64,14 @@
     #socks-pile {
       position: relative;
       width: 100%;
-      height: 50vh;
+      height: 60vh;
       margin: 0 auto 10px;
     }
 
     .sock {
       position: absolute;
-      width: 40px;
-      height: 60px;
+      width: 80px; /* Увеличили размер носков в 2 раза */
+      height: 120px; /* Увеличили размер носков в 2 раза */
       cursor: pointer;
       transition: opacity 0.5s, box-shadow 0.3s;
       border-radius: 10px;
@@ -79,7 +79,7 @@
     }
 
     .sock.flipped {
-      box-shadow: 0 0 0 3px #ffcc00; /* Желтая рамка вокруг носка */
+      box-shadow: 0 0 0 4px #ffcc00; /* Желтая рамка вокруг носка */
     }
 
     .sock.matched {
@@ -130,16 +130,15 @@
 
   <script>
     const levels = [
-      { socks: 4 },  // Уровень 1: 4 носка (2 пары)
-      { socks: 8 },  // Уровень 2: 8 носков (4 пары)
-      { socks: 12 }, // Уровень 3: 12 носков (6 пар)
-      { socks: 16 }, // Уровень 4: 16 носков (8 пар)
-      { socks: 20 }, // Уровень 5: 20 носков (10 пар)
-      { socks: 24 }, // Уровень 6: 24 носка (12 пар)
-      { socks: 28 }, // Уровень 7: 28 носков (14 пар)
-      { socks: 32 }, // Уровень 8: 32 носка (16 пар)
-      { socks: 36 }, // Уровень 9: 36 носков (18 пар)
-      { socks: 38 }, // Уровень 10: 38 носков (19 пар)
+      { socks: 4 },   // Уровень 1: 4 носка (2 пары)
+      { socks: 8 },   // Уровень 2: 8 носков (4 пары)
+      { socks: 16 },  // Уровень 3: 16 носков (8 пар)
+      { socks: 24 },  // Уровень 4: 24 носка (12 пар)
+      { socks: 32 },  // Уровень 5: 32 носка (16 пар)
+      { socks: 48 },  // Уровень 6: 48 носков (24 пары)
+      { socks: 64 },  // Уровень 7: 64 носка (32 пары)
+      { socks: 96 },  // Уровень 8: 96 носков (48 пар)
+      { socks: 128 }, // Уровень 9: 128 носков (64 пары)
     ];
     let currentLevel = 0;
     let socks = [];
@@ -182,7 +181,7 @@
         sockElement.src = `images/${sock}`;
         sockElement.dataset.index = index;
         const angle = Math.random() * 360; // Случайный угол для клубка
-        const distance = Math.random() * 80; // Случайное расстояние от центра
+        const distance = Math.random() * 100; // Случайное расстояние от центра
         sockElement.style.left = `calc(50% + ${Math.cos(angle) * distance}px)`; // Позиция по X
         sockElement.style.top = `calc(50% + ${Math.sin(angle) * distance}px)`; // Позиция по Y
         sockElement.style.transform = `rotate(${getRandomPosition(-30, 30)}deg)`; // Случайный поворот
