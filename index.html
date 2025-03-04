@@ -20,27 +20,28 @@
 
     #start-screen {
       text-align: center;
+      padding: 20px;
     }
 
     #start-screen img {
       width: 80%;
-      max-width: 400px;
+      max-width: 300px;
       margin-bottom: 20px;
     }
 
     #start-screen h1 {
-      font-size: 2.5rem;
+      font-size: 2rem;
       margin: 0;
     }
 
     #start-screen p {
-      font-size: 1.2rem;
+      font-size: 1rem;
       margin: 10px 0 20px;
     }
 
     #start-screen button {
       padding: 10px 20px;
-      font-size: 1.2rem;
+      font-size: 1rem;
       cursor: pointer;
       background-color: #4CAF50;
       color: white;
@@ -57,11 +58,12 @@
       display: none;
       text-align: center;
       width: 100%;
+      padding: 20px;
     }
 
     #socks-pile {
       position: relative;
-      width: 90%;
+      width: 100%;
       height: 60vh;
       margin: 0 auto 20px;
     }
@@ -86,7 +88,7 @@
     }
 
     #score, #timer, #mistakes {
-      font-size: 1.2rem;
+      font-size: 1rem;
       margin: 10px 0;
     }
 
@@ -95,27 +97,6 @@
       font-size: 1.5rem;
       color: red;
       margin-top: 20px;
-    }
-
-    #orientation-warning {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.9);
-      color: white;
-      font-size: 1.5rem;
-      text-align: center;
-      padding-top: 20%;
-      z-index: 1000;
-    }
-
-    @media (orientation: portrait) {
-      #orientation-warning {
-        display: block;
-      }
     }
   </style>
 </head>
@@ -136,10 +117,6 @@
     <div id="mistakes">Ошибки: <span id="mistake-count">0</span>/3</div>
     <div id="timer">Время: <span id="time">00:00</span></div>
     <div id="game-over">Game Over!</div>
-  </div>
-
-  <div id="orientation-warning">
-    Пожалуйста, переверните устройство в горизонтальную ориентацию для игры.
   </div>
 
   <!-- Звуки -->
